@@ -1,0 +1,103 @@
+---
+title: "Airline Industry"
+author: "Parv Patni"
+date: "December 22, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Mini Project to explain the factors for difference in price between an economy ticket and a premium-economy airline ticket
+
+```{r}
+getwd()
+airline.df<-read.csv(paste("SixAirlinesDataV2.csv",sep=""))
+head(airline.df)
+```
+```{r}
+library(psych)
+describe(airline.df)
+```
+##Mean Pricing for economy and premium in different airlines.
+```{r}
+aggregate(x = airline.df[c("PriceEconomy","PricePremium")],by=list(Airline=airline.df$Airline),FUN = mean)
+```
+```{r}
+boxplot(airline.df$PriceEconomy~airline.df$Airline, main="Airline Vs PriceEconomy",col = c("lightgreen","lightblue","peachpuff","gray","yellow","cyan"))
+boxplot(airline.df$PricePremium~airline.df$Airline, main="Airline Vs PricePremium",col = c("lightgreen","lightblue","peachpuff","gray","yellow","cyan"))
+```
+
+```{r}
+boxplot(airline.df$PriceEconomy,airline.df$PricePremium,ylab="Prices", main="Economy vs Premium Pricing", col=c("yellow" , "lightgreen"), names=c("Economy","Premium"))
+```
+```{r}
+par(mfrow=c(1,2))
+with(airline.df,plot(Aircraft,PriceEconomy,col=c("peachpuff","khaki"),main="Aircraft vs Economy Pricing"))
+with(airline.df,plot(Aircraft,PricePremium,col=c("peachpuff","khaki"), main="Aircraft vs Premium Pricing"))
+```
+```{r}
+plot(airline.df$Airline, airline.df$SeatsEconomy, main="Airline vs Seats in Economy Class",col="sienna1")
+plot(airline.df$Airline, airline.df$SeatsPremium, main="Airline vs Seats in Premium Class",col="sienna1")
+```
+```{r}
+plot(airline.df$IsInternational,main = "Number of Domestic vs International Flights",col="khaki")
+```
+
+
+##Price variation of economy with flight duration
+```{r}
+plot(airline.df$FlightDuration,airline.df$PriceEconomy,
+     main="Flight duration vs Economy Price",
+     xlab="Flight duration",
+     ylab = "Economy Price")
+abline(lm(airline.df$PriceEconomy~airline.df$FlightDuration),
+       col="red")
+```
+
+##Price variation of premium with flight duration
+
+```{r}
+plot(airline.df$FlightDuration,airline.df$PricePremium,
+     main="Flight duration vs Premium Price",
+     xlab="flight duration",
+     ylab="Premium Price")
+abline(lm(airline.df$PricePremium~airline.df$FlightDuration),
+       col="blue")
+```
+
+Increase is gradual for both classes along with the Duration of flight. However, Rate of increase for economy is more compared to premium.
+
+```{r}
+attach(airline.df)
+plot(WidthDifference,PriceRelative,main = "Analysis of width of Seats in Difference in price of class")
+abline(lm(PriceRelative~WidthDifference),col="red")
+```
+```{r}
+plot(PitchDifference,PriceRelative,main = "Analysis of Pitch of Seats in Difference in price of class")
+abline(lm(PriceRelative~PitchDifference),col="red")
+```
+```{r}
+library(corrgram)
+corrgram(airline.df, order=TRUE, lower.panel=panel.shade,
+         upper.panel=panel.pie, text.panel=panel.txt,
+         main="Corrgram of airline dataset")
+```
+
+Null Hypothesis : There is no significant difference between the price of tickets in economy class and premium economy class
+```{r}
+t.test(PriceEconomy,PricePremium,var.equal=TRUE, paired=FALSE)
+```
+We have a p-value = 1.544e-11 which is less than 0.05, suggesting that there is a significant difference between PriceEconomy and PricePremium. Hence we reject our null hypothesis.
+
+Regression model for showing the price differnce with respect to pitch difference and width difference
+
+```{r}
+fit <- lm(PriceRelative ~ PitchDifference + WidthDifference + FlightDuration + PercentPremiumSeats, data = airline.df)
+summary(fit)
+```
+
+PriceRelative = -0.179033 + (0.059311)x(PitchDifference) + (0.118140)x(WidthDifference) + (0.021707)x(FlightDuration)
+
+There is a significant relation of width difference, pitch difference and flight duration on difference in the price of tickets as their p-values <0.05, while PercentPremiumSeats contributes negatively with p-value>0.05
